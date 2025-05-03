@@ -1,55 +1,46 @@
-# 📈 Market Predictor – Prédiction des Indices Boursiers Européens par Machine Learning
+# 📈 Market Predictor – Forecasting European Stock Indices with Machine Learning
 
-## 🎯 Objectif du projet
+## 🎯 Project Objective
 
-Ce projet vise à explorer la **prédictibilité des grands indices boursiers européens** à l'aide de méthodes de **Machine Learning**. Nous cherchons à répondre à la question suivante :
+This project investigates whether it is possible to predict — better than random chance — the future movement of major **European stock indices** using **machine learning models**.
 
-> *Peut-on prédire — mieux que le hasard — l’évolution de grands indices boursiers européens en s'appuyant sur des modèles d’apprentissage automatique ?*
-
-Nous nous concentrons ici sur trois indices emblématiques :
+We focus on the following three benchmark indices:
 - 🇫🇷 **CAC 40** (France)
-- 🇪🇺 **STOXX Europe 600** (Europe large, incluant la Grande-Bretagne)
-- 🇪🇺 **EURO STOXX 50** (Zone euro uniquement)
+- 🇪🇺 **STOXX Europe 600** (Pan-European, includes UK)
+- 🇪🇺 **EURO STOXX 50** (Eurozone only)
 
 ---
 
-## 🧠 Cadre de recherche et inspirations
+## 🧠 Research Background & Literature
 
-La démarche du projet s’ancre dans l’état de l’art sur la prédiction boursière par ML, en combinant des sources **de prix**, **d’indicateurs techniques**, **macroéconomiques** et éventuellement **de sentiment**.
+This project builds on recent research in financial machine learning, which highlights the role of **technical indicators**, **macroeconomic variables**, and **investor sentiment** in forecasting market behavior.
 
-Nous nous appuyons notamment sur plusieurs travaux récents pour guider notre approche :
+### 🔬 Key References
 
-### 🔬 Recherches académiques clés
-
-- **Kumbure et al. (2022)** – Revue de 138 articles sur le ML en finance. Montre la prédominance des indicateurs techniques (SMA, RSI, etc.) et des modèles non linéaires comme les **SVM**, **réseaux de neurones** et plus récemment **LSTM**. 
-- **Liu & Long (2020)** – Proposent un modèle hybride combinant **ondelettes (EWT)**, **réseau LSTM optimisé**, et **Extreme Learning Machines** pour prédire les cours d'indices comme le S&P 500. Le modèle montre une nette amélioration par rapport aux approches classiques.
-- **Lin et al. (2021)** – Se concentrent sur la **classification de la tendance** du marché (up/down), en combinant **indicateurs techniques** et **motifs de chandeliers japonais**, testés avec des SVM, forêts aléatoires et LSTM.
-- **Ko & Chang (2021)** – Intègrent des **données de sentiment issues de forums et actualités** dans un modèle **LSTM-CNN**. Montre que le sentiment améliore significativement la prédiction.
-- **Latif et al. (2023)** – Insistent sur la **puissance explicative des variables macroéconomiques** (VIX, EPU, FSI, taux SSR, etc.), parfois supérieures aux indicateurs techniques.
+- **Kumbure et al. (2022)** – A comprehensive review of 138 ML-based stock forecasting studies (2000–2019). Most models use technical indicators (RSI, SMA, MACD) and techniques such as **SVM**, **neural networks**, and **LSTM**.
+- **Liu & Long (2020)** – A hybrid architecture combining **Empirical Wavelet Transform**, **deep LSTM**, and **Extreme Learning Machine** for predicting daily closing prices of major indices. Outperforms standard LSTM and random forests.
+- **Lin et al. (2021)** – Classify short-term market direction (up/down) using candlestick patterns and 21 technical indicators with various ML algorithms (logistic regression, k-NN, GBDT, LSTM).
+- **Ko & Chang (2021)** – Show how integrating **investor sentiment** from news and forums via **BERT + LSTM-CNN** significantly boosts directional prediction performance.
+- **Latif et al. (2023)** – Demonstrate that **macroeconomic indicators** (VIX, EPU, FSI, shadow rates) can outperform technical indicators in forecasting S&P 500 returns using deep learning models.
 
 ---
 
-## 🧪 Hypothèse de recherche
+## 🧪 Research Hypotheses
 
-Nous testons l’hypothèse que les modèles de ML, en particulier ceux intégrant des **variables macroéconomiques et techniques**, peuvent **battre le hasard** dans la prédiction des **rendements quotidiens ou directionnels** des indices européens.
+We test the hypothesis that **machine learning models**, especially those using both technical and macroeconomic data, can outperform random guessing in predicting **daily returns** or **market direction** of European stock indices.
 
-Deux approches seront comparées :
-
-- **Régression** : Prédire le rendement journalier de l’indice.
-- **Classification** : Prédire la tendance haussière ou baissière du marché (up/down).
-
----
-
-## 🗃️ Sources de données
-
-Nous utilisons une combinaison de sources ouvertes, notamment :
-
-- 📈 **Yahoo Finance API** (via `yfinance`) – Données historiques OHLCV des indices CAC 40, Euro Stoxx 50, Stoxx 600.
-- 📊 **Indicateurs techniques** – Calculés localement (RSI, MACD, moyennes mobiles, etc.).
-- 🌍 **Variables macroéconomiques** – Via **FRED**, **Banque Mondiale**, ou autres bases ouvertes (ex : VIX, taux d’intérêt, pétrole, EPU).
-- 💬 **(Optionnel)** Données de sentiment via sources secondaires (Kaggle, news headlines, etc.).
+We will compare:
+- **Regression models**: to forecast the exact daily return
+- **Classification models**: to predict the direction (up/down)
 
 ---
 
-## ⚙️ Organisation du projet
+## 🗃️ Data Sources
+
+The project uses publicly available and easily accessible datasets:
+
+- 📈 **Historical market data** via `yfinance` – OHLCV prices for CAC 40, EURO STOXX 50, and STOXX Europe 600.
+- 📊 **Technical indicators** – Locally computed (SMA, EMA, RSI, MACD, etc.).
+- 🌍 **Macroeconomic variables** – From **FRED**, **World Bank**, etc. (e.g., VIX, interest rates, oil prices, policy uncertainty).
+- 💬 **(Optional)** Sentiment data from Kaggle datasets or news APIs.
 
