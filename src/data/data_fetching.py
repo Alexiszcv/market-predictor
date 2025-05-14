@@ -2,7 +2,7 @@ import yfinance as yf
 import pandas as pd
 
 # Utilisation de l'API de yahoofinance pour importer les données relatives aux actifs financiers (ici les indices CAC40, STOXX600 et EUROSTOXX50)
-def download_index(symbol, name, start="2020-01-01", end=None): 
+def download_index(symbol, name, start="2018-01-01", end=None): 
     df = yf.download(symbol, start=start, end=end)
     df.columns = df.columns.droplevel(1)
     df = df.rename(columns={col: f"{col}_{name}" for col in df.columns if col != "Date"})
