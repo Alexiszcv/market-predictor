@@ -3,49 +3,42 @@ import ta
 from ta.trend import ADXIndicator
 import numpy as np
 
-def add_technical_indicators(df, index_name):
+def add_technical_indicators(df, index_name): # IMPORTANT ! On shift(1) tous les indicateurs, permet d'avoir la valeur calculée à partir des données à t-1 pour l'instant t (sinon cela induirait du data leakage)
     close_col, high_col, low_col, volume_col = f"Close_{index_name}", f"High_{index_name}", f"Low_{index_name}", f"Volume_{index_name}"
 
     # MA (5)
-    df[f"MA_5_{index_name}"] = df[close_col].rolling(window=5).mean()
-
-    # DEMA (5)
-    #df[f"DEMA_5_{index_name}"] = ta.trend.DEMAIndicator(close=df[close_col], window=5).dema()
+    df[f"MA_5_{index_name}"] = df[close_col].rolling(window=5).mean().shift(1)
 
     # MACD
     macd = ta.trend.MACD(close=df[close_col])
-    df[f"MACD_{index_name}"] = macd.macd()
-
-    # KAMA (5)
-    #df[f"KAMA_5_{index_name}"] = ta.trend.KAMAIndicator(close=df[close_col], window=5).kama()
+    df[f"MACD_{index_name}"] = macd.macd().shift(1)
 
     # EMA, SMA (10)
-    df[f"EMA_10_{index_name}"] = ta.trend.EMAIndicator(close=df[close_col], window=10).ema_indicator()
-    df[f"SMA_10_{index_name}"] = ta.trend.SMAIndicator(close=df[close_col], window=10).sma_indicator()
+    df[f"EMA_10_{index_name}"] = ta.trend.EMAIndicator(close=df[close_col], window=10).ema_indicator().shift(1)
+    df[f"SMA_10_{index_name}"] = ta.trend.SMAIndicator(close=df[close_col], window=10).sma_indicator().shift(1)
 
-    # ADX, DX (10)
+    # ADX (10)
     adx_indicator = ta.trend.ADXIndicator(high=df[high_col], low=df[low_col], close=df[close_col], window=10)
-    df[f"ADX_10_{index_name}"] = adx_indicator.adx()
-    #df[f"DX_10_{index_name}"] = adx_indicator.dx()
+    df[f"ADX_10_{index_name}"] = adx_indicator.adx().shift(1)
 
     # APO (10)
-    df[f"APO_10_{index_name}"] = ta.momentum.AwesomeOscillatorIndicator(high=df[high_col], low=df[low_col]).awesome_oscillator()
+    df[f"APO_10_{index_name}"] = ta.momentum.AwesomeOscillatorIndicator(high=df[high_col], low=df[low_col]).awesome_oscillator().shift(1)
 
     # CCI (10)
-    df[f"CCI_10_{index_name}"] = ta.trend.CCIIndicator(high=df[high_col], low=df[low_col], close=df[close_col], window=10).cci()
+    df[f"CCI_10_{index_name}"] = ta.trend.CCIIndicator(high=df[high_col], low=df[low_col], close=df[close_col], window=10).cci().shift(1)
 
     # MFI (10)
-    df[f"MFI_10_{index_name}"] = ta.volume.MFIIndicator(high=df[high_col], low=df[low_col], close=df[close_col], volume=df[volume_col], window=10).money_flow_index()
+    df[f"MFI_10_{index_name}"] = ta.volume.MFIIndicator(high=df[high_col], low=df[low_col], close=df[close_col], volume=df[volume_col], window=10).money_flow_index().shift(1)
 
     # RSI (10)
-    df[f"RSI_10_{index_name}"] = ta.momentum.RSIIndicator(close=df[close_col], window=10).rsi()
+    df[f"RSI_10_{index_name}"] = ta.momentum.RSIIndicator(close=df[close_col], window=10).rsi().shift(1)
 
-    # ATR, NATR (10)
+    # ATR (10)
     atr = ta.volatility.AverageTrueRange(high=df[high_col], low=df[low_col], close=df[close_col], window=10)
-    df[f"ATR_10_{index_name}"] = atr.average_true_range()
-    #df[f"NATR_10_{index_name}"] = atr.natr()
+    df[f"ATR_10_{index_name}"] = atr.average_true_range().shift(1)
 
     return df
+
 
 
 def get_lag_feature(df, indicator, period):
@@ -58,28 +51,26 @@ def get_rolling_features(df, indicator, window=5):
         pd.Series(df[indicator].rolling(window=window).std(), name=f"{indicator}_rollstd{window}")
     ], axis=1)
 
-def add_lag_and_rolling_features(df, index_list, indicator_list):
+def add_lag_rolling_and_return_features(df, index_list):
 
-    new_features = []
-    indicators = []
+    # Rolling mean / std directement sur log-prix 
 
-    for indicator in indicator_list:
-        for index in index_list:
-            indicators.append(f"{indicator}_{index}")
+    for index in index_list: 
+        df[f"log_Close_{index}"] = np.log(df[f"Close_{index}"])
 
-    for ind in indicators:
-        new_features.append(get_lag_feature(df, ind, 1))
-        new_features.append(get_rolling_features(df, ind, 5))
+        df[f"log_Close_{index}_rolling_mean5"] = df[f"log_Close_{index}"].shift(1).rolling(window=5).mean() # Pareil, on shift pour éviter le data leakage 
+        df[f"log_Close_{index}_rolling_std5"] = df[f"log_Close_{index}"].shift(1).rolling(window=5).std()
 
-    # Concat toutes les nouvelles colonnes en une fois
-    df = pd.concat([df] + new_features, axis=1)
-
-    # Ajout des lags directement pour les prix des indices
+    # Ajout des lags 
 
     for index in ["CAC40", "EUROSTOXX50", "STOXX600"]: 
-        df[f"Close_{index}_lag1"] = df[f"Close_{index}"].shift(1)
-        df[f"Close_{index}_lag2"] = df[f"Close_{index}"].shift(2)
-
+        for i in range(1, 6):
+            df[f"log_Close_{index}_lag{i}"] = np.log(df[f"Close_{index}"]).shift(i)
+            df[f"log_Open_{index}_lag{i}"] = np.log(df[f"Open_{index}"]).shift(i)
+            df[f"log_High_{index}_lag{i}"] = np.log(df[f"High_{index}"]).shift(i)
+            df[f"log_Low_{index}_lag{i}"] = np.log(df[f"Low_{index}"]).shift(i)
+            df[f"log_Volume_{index}_lag{i}"] = np.log(df[f"Volume_{index}"]).shift(i)
+            df[f"log_Return_{index}_lag{i}"] = np.log(df[f"Close_{index}"]).shift(i) - np.log(df[f"Close_{index}"]).shift(i+1)
 
     # Défragmenter proprement (optionnel mais recommandé)
     df = df.copy()
@@ -104,10 +95,18 @@ def add_log_returns(df, indices):
         df[f"Return_{index}_t+1"] = df[return_col].shift(-1)
     return df
 
+def add_temporal_features(df):
+    df['day_of_week'] = df.index.dayofweek        # 0=Lundi, ..., 4=Vendredi
+    df['day_of_month'] = df.index.day
+    df['month'] = df.index.month
+    df['quarter'] = df.index.quarter
+    df['is_month_end'] = df.index.is_month_end.astype(int)
+    df['is_month_start'] = df.index.is_month_start.astype(int)
+    df['is_start_of_week'] = (df['day_of_week'] <= 1).astype(int) # Début de semaine : Lundi (0), Mardi (1)
+    df['is_end_of_week'] = (df['day_of_week'] >= 3).astype(int) # Fin de semaine : Jeudi (3), Vendredi (4)
 
-def add_log_prices(df, indices):
-    for index in indices:
-        close_col = f"Close_{index}"
-        log_close_col = f"Log_close_{index}"
-        df[log_close_col] = np.log(df[close_col]) 
-    return df    
+    return df
+
+
+
+

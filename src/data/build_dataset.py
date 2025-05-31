@@ -1,6 +1,6 @@
 import pandas as pd
 from src.utils.path import RAW_DIR, PROCESSED_DIR
-from src.features.add_features import add_lag_and_rolling_features, add_technical_indicators, add_log_returns, add_log_prices
+from src.features.add_features import add_lag_rolling_and_return_features, add_technical_indicators, add_temporal_features
 
 
 index_list = ["CAC40", "EUROSTOXX50", "STOXX600"]
@@ -24,14 +24,12 @@ def main():
     for index in index_list:    
         df = add_technical_indicators(df, index)
 
-    # Ajout des lags et rolling features
-    df = add_lag_and_rolling_features(df, index_list, indicator_list)
+    # Ajout des lags et rolling features (log_Close_lag, log_Open_lag, log_High_lag, log_Low_lag, log_Volume_lag de 1 à 5 à chaque fois)
+    df = add_lag_rolling_and_return_features(df, index_list)
+    
+    # Ajout des features temporelles
+    df = add_temporal_features(df)
 
-    # Ajout des rentabilités logarithmiques 
-    df = add_log_returns(df, index_list)
-
-    #Ajout des log-prix de fermeture
-    df = add_log_prices(df, index_list)
     
     # Sauvegarde en Parquet
     output_path = PROCESSED_DIR / "dataset_full.parquet"
