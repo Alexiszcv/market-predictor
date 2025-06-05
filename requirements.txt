@@ -6,3 +6,5 @@ matplotlib
 ta  # indicateurs techniques 
 fastparquet # Stocker le df de travail au format parquet (dans data/processed/)
 xgboost
+scikit-learn.metrics
+lightgbm

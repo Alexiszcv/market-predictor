@@ -21,7 +21,7 @@ X = pd.read_parquet(FULL_DATASET)
 # Paramètres
 window_size = 500  # Taille de la fenêtre glissante
 targets = ['log_Close_CAC40', 'log_Close_STOXX600', 'log_Close_EUROSTOXX50']  # Variables cibles
-features = [col for col in X.columns if col not in col_to_exclude]  
+features = [col for col in X.columns if col not in col_to_exclude and col not in targets]  
 
 y = X[targets]
 X = X[features]
