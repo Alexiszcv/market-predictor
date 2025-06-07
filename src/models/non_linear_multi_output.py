@@ -11,36 +11,49 @@ from sklearn.svm import SVR
 from src.utils.path import FULL_DATASET, PRED_DIR
 
 class WalkForwardPredictor:
-    def __init__(self, base_model, target_names, window_size=500, duration=60):
+    def __init__(self, base_model, target_names, window_size=500, duration=60, is_naive = False):
         self.base_model = base_model
         self.window_size = window_size
         self.duration = duration
+        self.is_naive = is_naive
         self.targets = target_names
         self.model = MultiOutputRegressor(self.base_model)
-        self.model_name = type(self.base_model).__name__
+
+        if is_naive: 
+            self.model_name = "Naïf"
+        else : 
+            self.model_name = type(self.base_model).__name__
+
         self.y_preds = []
         self.y_trues = []
 
     def fit_predict(self, X, y):
         """Main function to run the walk-forward prediction."""
-        for start in range(0, self.duration):
-            print(f"Fitting model for day {start + 1} out of {self.duration}")
-            end = start + self.window_size
-            X_train, y_train = X.iloc[start:end], y.iloc[start:end]
-            X_test, y_test = X.iloc[end:end+1], y.iloc[end:end+1]
 
-            X_train_clean = X_train.replace([np.inf, -np.inf], np.nan).dropna()
-            y_train_clean = y_train.loc[X_train_clean.index]
+        if self.is_naive : 
+            y_pred = y.iloc[self.window_size - 1 : self.window_size + self.duration - 1]
+            y_trues = y.iloc[self.window_size : self.window_size + self.duration]
+            self.y_preds = y_pred.values 
+            self.y_trues = y_trues.values
+        else: 
+            for start in range(0, self.duration):
+                print(f"Fitting model for day {start + 1} out of {self.duration}")
+                end = start + self.window_size
+                X_train, y_train = X.iloc[start:end], y.iloc[start:end]
+                X_test, y_test = X.iloc[end:end+1], y.iloc[end:end+1]
 
-            X_train_clean = X_train_clean.clip(lower=-1e6, upper=1e6)
-            X_test_clean = X_test.clip(lower=-1e6, upper=1e6)
+                X_train_clean = X_train.replace([np.inf, -np.inf], np.nan).dropna()
+                y_train_clean = y_train.loc[X_train_clean.index]
 
-            self.model.fit(X_train_clean, y_train_clean)
-            y_pred = self.model.predict(X_test_clean)
+                X_train_clean = X_train_clean.clip(lower=-1e6, upper=1e6)
+                X_test_clean = X_test.clip(lower=-1e6, upper=1e6)
 
-            self.y_preds.append(y_pred.flatten())
-            self.y_trues.append(y_test.values.flatten())
+                self.model.fit(X_train_clean, y_train_clean)
+                y_pred = self.model.predict(X_test_clean)
 
+                self.y_preds.append(y_pred.flatten())
+                self.y_trues.append(y_test.values.flatten())
+        
     def evaluate(self):
         """Calculate and return the Mean Squared Error per target."""
         y_preds_array = np.array(self.y_preds)
@@ -81,14 +94,14 @@ y = X[targets]
 X = X[features]
 
 if __name__ == "__main__":
-    model = XGBRegressor(n_estimators=100, max_depth=5, verbosity=0)
+    # model = XGBRegressor(n_estimators=100, max_depth=5, verbosity=0)
     # model = LGBMRegressor(n_estimators=100, max_depth=5, verbose=-1)
     # model = RandomForestRegressor(n_estimators=100, max_depth=5, random_state=42, n_jobs=-1)
     # model = GradientBoostingRegressor(n_estimators=100, max_depth=5)
     # model = ExtraTreesRegressor(n_estimators=100, max_depth=5)
-    # model = Ridge(alpha=1.0)
+    model = Ridge(alpha=1.0)
     # model = SVR(kernel='rbf', C=1.0, epsilon=0.1)
-    predictor = WalkForwardPredictor(model, target_names=targets)
+    predictor = WalkForwardPredictor(model, target_names=targets, is_naive = True)
     predictor.fit_predict(X, y)
     predictor.evaluate()
     predictor.save_predictions(X.index, targets, PRED_DIR)

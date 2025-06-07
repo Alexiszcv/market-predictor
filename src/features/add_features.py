@@ -77,25 +77,8 @@ def add_lag_rolling_and_return_features(df, index_list):
 
     return df 
 
-def add_log_returns(df, indices):
-    """
-    Ajoute les log-returns (rendements logarithmiques) pour chaque indice.
 
-    Paramètres :
-    - df : DataFrame avec les colonnes 'Close_{indice}'
-    - indices : liste des noms d'indices, ex : ['CAC40', 'STOXX600', 'EUROSTOXX50']
-
-    Retour :
-    - DataFrame avec colonnes 'Return_{indice}' ajoutées
-    """
-    for index in indices:
-        close_col = f"Close_{index}"
-        return_col = f"Return_{index}"
-        df[return_col] = np.log(df[close_col] / df[close_col].shift(1))
-        df[f"Return_{index}_t+1"] = df[return_col].shift(-1)
-    return df
-
-def add_temporal_features(df):
+def add_temporal_features(df): # Pour le modèle de prédiction journalier 
     df['day_of_week'] = df.index.dayofweek        # 0=Lundi, ..., 4=Vendredi
     df['day_of_month'] = df.index.day
     df['month'] = df.index.month
@@ -105,6 +88,16 @@ def add_temporal_features(df):
     df['is_start_of_week'] = (df['day_of_week'] <= 1).astype(int) # Début de semaine : Lundi (0), Mardi (1)
     df['is_end_of_week'] = (df['day_of_week'] >= 3).astype(int) # Fin de semaine : Jeudi (3), Vendredi (4)
 
+    return df
+
+def add_temporal_features_month(df): # Pour le modèle de prédiction mensuel 
+    df['month'] = df.index.month
+    df['is_january'] = (df['month'] == 1).astype(int)
+    df['is_earnings_season'] = df['month'].isin([4, 7, 10]).astype(int)
+    df['is_september_october'] = df['month'].isin([9, 10]).astype(int)
+    df['is_summer'] = df['month'].isin([7, 8]).astype(int)
+    df['is_end_of_year'] = df['month'] == 12
+    df['is_end_of_year'] = (df['is_end_of_year'] & (df.index.day >= 15)).astype(int)
     return df
 
 
